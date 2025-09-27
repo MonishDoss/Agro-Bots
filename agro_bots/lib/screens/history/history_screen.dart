@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../constants/colors.dart';
 import '../../constants/strings.dart';
-import '../../models/plant_analysis_model.dart';
-import '../result/result_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -13,49 +10,29 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  List<PlantAnalysisModel> _historyItems = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadHistory();
-  }
-
-  void _loadHistory() {
-    // Mock history data
-    _historyItems = [
-      PlantAnalysisModel(
-        id: '1',
-        imagePath: '',
-        diseaseName: 'Early Blight',
-        diseaseType: 'Fungal Disease (Alternaria solani)',
-        cause: 'Caused by the fungus Alternaria solani',
-        recommendedFertilizer: 'Use copper-based fungicides',
-        analysisDate: DateTime.now().subtract(const Duration(days: 2)),
-        confidence: 0.85,
-      ),
-      PlantAnalysisModel(
-        id: '2',
-        imagePath: '',
-        diseaseName: 'Late Blight',
-        diseaseType: 'Fungal Disease (Phytophthora infestans)',
-        cause: 'Caused by Phytophthora infestans',
-        recommendedFertilizer: 'Use preventive fungicides',
-        analysisDate: DateTime.now().subtract(const Duration(days: 5)),
-        confidence: 0.92,
-      ),
-      PlantAnalysisModel(
-        id: '3',
-        imagePath: '',
-        diseaseName: 'Leaf Curl',
-        diseaseType: 'Viral Disease',
-        cause: 'Transmitted by whiteflies',
-        recommendedFertilizer: 'Control whitefly population',
-        analysisDate: DateTime.now().subtract(const Duration(days: 10)),
-        confidence: 0.78,
-      ),
-    ];
-  }
+  final List<Map<String, dynamic>> _mockHistoryData = [
+    {
+      'id': '1',
+      'diseaseName': 'Early Blight',
+      'diseaseType': 'Fungal Disease (Alternaria solani)',
+      'date': 'Dec 15, 2023',
+      'confidence': '85%',
+    },
+    {
+      'id': '2',
+      'diseaseName': 'Late Blight',
+      'diseaseType': 'Fungal Disease (Phytophthora infestans)',
+      'date': 'Dec 12, 2023',
+      'confidence': '92%',
+    },
+    {
+      'id': '3',
+      'diseaseName': 'Leaf Curl',
+      'diseaseType': 'Viral Disease',
+      'date': 'Dec 10, 2023',
+      'confidence': '78%',
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +49,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: _historyItems.isEmpty
+      body: _mockHistoryData.isEmpty
           ? const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -101,16 +78,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
             )
           : ListView.builder(
               padding: const EdgeInsets.all(20),
-              itemCount: _historyItems.length,
+              itemCount: _mockHistoryData.length,
               itemBuilder: (context, index) {
-                final item = _historyItems[index];
+                final item = _mockHistoryData[index];
                 return _buildHistoryItem(item);
               },
             ),
     );
   }
 
-  Widget _buildHistoryItem(PlantAnalysisModel analysis) {
+  Widget _buildHistoryItem(Map<String, dynamic> data) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(15),
@@ -127,12 +104,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       ),
       child: InkWell(
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ResultScreen(analysis: analysis),
-            ),
-          );
+          _showDetailsDialog(context, data);
         },
         child: Row(
           children: [
@@ -159,7 +131,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    analysis.diseaseName,
+                    data['diseaseName'],
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -168,7 +140,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    analysis.diseaseType,
+                    data['diseaseType'],
                     style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.textSecondary,
@@ -184,9 +156,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        DateFormat(
-                          'MMM dd, yyyy',
-                        ).format(analysis.analysisDate),
+                        data['date'],
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.textSecondary,
@@ -203,7 +173,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          '${(analysis.confidence * 100).toStringAsFixed(0)}%',
+                          data['confidence'],
                           style: const TextStyle(
                             fontSize: 12,
                             color: AppColors.primaryGreen,
@@ -226,6 +196,42 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showDetailsDialog(BuildContext context, Map<String, dynamic> data) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(data['diseaseName']),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Type: ${data['diseaseType']}'),
+              const SizedBox(height: 8),
+              Text('Date: ${data['date']}'),
+              const SizedBox(height: 8),
+              Text('Confidence: ${data['confidence']}'),
+              const SizedBox(height: 16),
+              const Text(
+                'Recommendations:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const Text('• Apply appropriate fungicide'),
+              const Text('• Ensure proper plant spacing'),
+              const Text('• Regular monitoring required'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

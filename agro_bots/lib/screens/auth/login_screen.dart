@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
 import '../../constants/strings.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
-import '../../services/auth_service.dart';
 import '../home/home_screen.dart';
 import 'signup_screen.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _rememberMe = false;
 
   @override
   void dispose() {
@@ -32,25 +32,16 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
 
-      try {
-        await Provider.of<AuthService>(
-          context,
-          listen: false,
-        ).signIn(_emailController.text, _passwordController.text);
+      // Simulate loading
+      await Future.delayed(const Duration(seconds: 2));
 
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(e.toString())));
-        }
-      } finally {
-        if (mounted) setState(() => _isLoading = false);
+      setState(() => _isLoading = false);
+
+      // Navigate to home screen
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
       }
     }
   }
@@ -60,13 +51,15 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const SizedBox(height: 40),
+
                 // Header
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 20),
@@ -94,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-                const Spacer(),
+                const SizedBox(height: 40),
 
                 // Welcome text
                 const Text(
@@ -141,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 // Password field
                 CustomTextField(
-                  hintText: 'Type your password',
+                  hintText: 'Enter your password',
                   labelText: AppStrings.password,
                   controller: _passwordController,
                   isPassword: true,
@@ -149,34 +142,56 @@ class _LoginScreenState extends State<LoginScreen> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your password';
                     }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
                     return null;
                   },
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
 
-                // Forgot password
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      // Handle forgot password
-                    },
-                    child: const Text(
-                      'Forgot Password?',
-                      style: TextStyle(
-                        color: AppColors.primaryGreen,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                // Remember me and Forgot password
+                Row(
+                  children: [
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: Checkbox(
+                            value: _rememberMe,
+                            onChanged: (value) {
+                              setState(() {
+                                _rememberMe = value ?? false;
+                              });
+                            },
+                            activeColor: AppColors.primaryGreen,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('Remember me'),
+                      ],
+                    ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ForgotPasswordScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        AppStrings.forgotPassword,
+                        style: TextStyle(
+                          color: AppColors.primaryGreen,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 30),
 
                 // Sign in button
                 CustomButton(
@@ -193,20 +208,27 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(color: AppColors.textSecondary),
                 ),
 
-                const Spacer(),
+                const SizedBox(height: 20),
+
+                // Social login buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildSocialButton(Icons.facebook, Colors.blue),
+                    const SizedBox(width: 20),
+                    _buildSocialButton(Icons.info, Colors.green),
+                    const SizedBox(width: 20),
+                    _buildSocialButton(Icons.apple, Colors.black),
+                  ],
+                ),
+
+                const SizedBox(height: 40),
 
                 // Sign up link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
-                      "Don't have an account?",
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
+                    const Text(AppStrings.dontHaveAccount),
                     TextButton(
                       onPressed: () {
                         Navigator.push(
@@ -217,11 +239,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         );
                       },
                       child: const Text(
-                        'Sign Up',
+                        AppStrings.signUp,
                         style: TextStyle(
                           color: AppColors.primaryGreen,
                           fontWeight: FontWeight.w600,
-                          fontSize: 14,
                         ),
                       ),
                     ),
@@ -232,6 +253,18 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSocialButton(IconData icon, Color color) {
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Icon(icon, color: color),
     );
   }
 }

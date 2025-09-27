@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
 import '../../constants/strings.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
-import '../../services/auth_service.dart';
 import '../home/home_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -35,78 +33,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
 
-      try {
-        await Provider.of<AuthService>(context, listen: false).signUp(
-          _fullNameController.text.trim(),
-          _emailController.text.trim(),
-          _passwordController.text,
-        );
+      // Simulate loading
+      await Future.delayed(const Duration(seconds: 2));
 
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(e.toString()),
-              backgroundColor: AppColors.errorColor,
-            ),
-          );
-        }
-      } finally {
-        if (mounted) setState(() => _isLoading = false);
+      setState(() => _isLoading = false);
+
+      // Navigate to home screen
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
       }
     }
-  }
-
-  String? _validateName(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Please enter your full name';
-    }
-    if (value.trim().length < 2) {
-      return 'Name must be at least 2 characters';
-    }
-    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value.trim())) {
-      return 'Name can only contain letters and spaces';
-    }
-    return null;
-  }
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Please enter your email';
-    }
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegex.hasMatch(value.trim())) {
-      return 'Please enter a valid email address';
-    }
-    return null;
-  }
-
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter your password';
-    }
-    if (value.length < 8) {
-      return 'Password must be at least 8 characters';
-    }
-    if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)').hasMatch(value)) {
-      return 'Password must contain uppercase, lowercase and number';
-    }
-    return null;
-  }
-
-  String? _validateConfirmPassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please confirm your password';
-    }
-    if (value != _passwordController.text) {
-      return 'Passwords do not match';
-    }
-    return null;
   }
 
   @override
@@ -125,13 +63,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: AppColors.primaryGreen.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Text(
                         'Sign up page',
@@ -145,8 +80,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
+                        horizontal: 16,
+                        vertical: 8,
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.primaryGreen,
@@ -183,11 +118,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   hintText: 'Enter your full name',
                   labelText: AppStrings.fullName,
                   controller: _fullNameController,
-                  validator: _validateName,
-                  prefixIcon: const Icon(
-                    Icons.person_outline,
-                    color: AppColors.textSecondary,
-                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your full name';
+                    }
+                    return null;
+                  },
                 ),
 
                 const SizedBox(height: 20),
@@ -198,11 +134,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   labelText: AppStrings.email,
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  validator: _validateEmail,
-                  prefixIcon: const Icon(
-                    Icons.email_outlined,
-                    color: AppColors.textSecondary,
-                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your email';
+                    }
+                    if (!value.contains('@')) {
+                      return 'Please enter a valid email';
+                    }
+                    return null;
+                  },
                 ),
 
                 const SizedBox(height: 20),
@@ -213,11 +153,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   labelText: AppStrings.password,
                   controller: _passwordController,
                   isPassword: true,
-                  validator: _validatePassword,
-                  prefixIcon: const Icon(
-                    Icons.lock_outline,
-                    color: AppColors.textSecondary,
-                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your password';
+                    }
+                    if (value.length < 6) {
+                      return 'Password must be at least 6 characters';
+                    }
+                    return null;
+                  },
                 ),
 
                 const SizedBox(height: 20),
@@ -228,47 +172,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   labelText: AppStrings.confirmPassword,
                   controller: _confirmPasswordController,
                   isPassword: true,
-                  validator: _validateConfirmPassword,
-                  prefixIcon: const Icon(
-                    Icons.lock_outline,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // Password requirements
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryGreen.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppColors.primaryGreen.withOpacity(0.2),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Password requirements:',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primaryGreen,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '• At least 8 characters\n• One uppercase letter\n• One lowercase letter\n• One number',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.textSecondary,
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
-                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please confirm your password';
+                    }
+                    if (value != _passwordController.text) {
+                      return 'Passwords do not match';
+                    }
+                    return null;
+                  },
                 ),
 
                 const SizedBox(height: 30),
@@ -285,39 +197,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const Text(
                   AppStrings.or,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Social login buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildSocialButton(
-                      Icons.facebook,
-                      Colors.blue,
-                      'Facebook',
-                      () => _socialLogin('facebook'),
-                    ),
-                    const SizedBox(width: 15),
-                    _buildSocialButton(
-                      Icons.g_mobiledata,
-                      Colors.red,
-                      'Google',
-                      () => _socialLogin('google'),
-                    ),
-                    const SizedBox(width: 15),
-                    _buildSocialButton(
-                      Icons.apple,
-                      Colors.black,
-                      'Apple',
-                      () => _socialLogin('apple'),
-                    ),
-                  ],
+                  style: TextStyle(color: AppColors.textSecondary),
                 ),
 
                 const SizedBox(height: 30),
@@ -326,46 +206,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
-                      AppStrings.alreadyHaveAccount,
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 14,
-                      ),
-                    ),
+                    const Text(AppStrings.alreadyHaveAccount),
                     const SizedBox(width: 4),
                     TextButton(
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
                       child: const Text(
                         AppStrings.signIn,
                         style: TextStyle(
                           color: AppColors.primaryGreen,
                           fontWeight: FontWeight.w600,
-                          fontSize: 14,
                         ),
                       ),
                     ),
                   ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // Terms and Privacy
-                Text(
-                  'By creating an account, you agree to our Terms of Service and Privacy Policy',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                    height: 1.3,
-                  ),
                 ),
               ],
             ),
@@ -374,47 +229,4 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
     );
   }
-
-  Widget _buildSocialButton(
-    IconData icon,
-    Color color,
-    String label,
-    VoidCallback onPressed,
-  ) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: 55,
-        height: 55,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.grey.shade300, width: 1.5),
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 3,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        child: Icon(icon, color: color, size: 28),
-      ),
-    );
-  }
-
-  void _socialLogin(String provider) {
-    // Implement social login
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${provider.capitalize()} login coming soon!'),
-        backgroundColor: AppColors.primaryGreen,
-      ),
-    );
-  }
-}
-
-extension StringCasingExtension on String {
-  String capitalize() => '${this[0].toUpperCase()}${substring(1)}';
 }
