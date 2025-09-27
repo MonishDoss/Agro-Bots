@@ -119,13 +119,32 @@ class _HomeContentState extends State<HomeContent>
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final width = size.width;
+    final height = size.height;
+
+    // Responsive breakpoints
+    final isSmallScreen = width < 360;
+    final isMediumScreen = width >= 360 && width < 400;
+    final isLargeScreen = width >= 400;
+
+    // Adaptive dimensions
+    final horizontalPadding = isSmallScreen
+        ? 16.0
+        : (isMediumScreen ? 18.0 : 20.0);
+    final cardSpacing = height * 0.025; // 2.5% of screen height
+    final headerHeight = height * 0.06; // 6% of screen height
+
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: _refreshData,
         color: AppColors.primaryGreen,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(20.0),
+          padding: EdgeInsets.symmetric(
+            horizontal: horizontalPadding,
+            vertical: height * 0.02, // 2% of screen height
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -134,49 +153,49 @@ class _HomeContentState extends State<HomeContent>
                 position: _cardSlideAnimations[0],
                 child: FadeTransition(
                   opacity: _cardFadeAnimations[0],
-                  child: _buildHeader(),
+                  child: _buildHeader(width, headerHeight),
                 ),
               ),
 
-              const SizedBox(height: 30),
+              SizedBox(height: cardSpacing),
 
               // Greeting card with animation
               SlideTransition(
                 position: _cardSlideAnimations[1],
                 child: FadeTransition(
                   opacity: _cardFadeAnimations[1],
-                  child: _buildGreetingCard(),
+                  child: _buildGreetingCard(width, height),
                 ),
               ),
 
-              const SizedBox(height: 30),
+              SizedBox(height: cardSpacing),
 
               // Process flow with animation
               SlideTransition(
                 position: _cardSlideAnimations[2],
                 child: FadeTransition(
                   opacity: _cardFadeAnimations[2],
-                  child: _buildProcessFlow(),
+                  child: _buildProcessFlow(width, height),
                 ),
               ),
 
-              const SizedBox(height: 30),
+              SizedBox(height: cardSpacing),
 
               // Quick Stats Card
               SlideTransition(
                 position: _cardSlideAnimations[3],
                 child: FadeTransition(
                   opacity: _cardFadeAnimations[3],
-                  child: _buildQuickStatsCard(),
+                  child: _buildQuickStatsCard(width, height),
                 ),
               ),
 
-              const SizedBox(height: 30),
+              SizedBox(height: cardSpacing),
 
               // Action buttons
-              _buildActionButtons(context),
+              _buildActionButtons(context, width, height),
 
-              const SizedBox(height: 20),
+              SizedBox(height: height * 0.02),
             ],
           ),
         ),
@@ -184,9 +203,17 @@ class _HomeContentState extends State<HomeContent>
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(double width, double height) {
+    final fontSize = width < 360 ? 18.0 : (width < 400 ? 19.0 : 20.0);
+    final iconSize = width < 360 ? 20.0 : 24.0;
+    final horizontalPadding = width * 0.05; // 5% of screen width
+    final verticalPadding = height * 0.2; // 20% of header height
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+        vertical: verticalPadding,
+      ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [AppColors.primaryGreen, AppColors.lightGreen],
@@ -212,16 +239,16 @@ class _HomeContentState extends State<HomeContent>
             builder: (context, rotation, child) {
               return Transform.rotate(
                 angle: rotation * 0.5,
-                child: Icon(Icons.eco, color: Colors.white, size: 24),
+                child: Icon(Icons.eco, color: Colors.white, size: iconSize),
               );
             },
           ),
-          const SizedBox(width: 12),
-          const Text(
+          SizedBox(width: width * 0.03), // 3% of screen width
+          Text(
             AppStrings.appName,
             style: TextStyle(
               color: Colors.white,
-              fontSize: 20,
+              fontSize: fontSize,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,
             ),
@@ -231,10 +258,16 @@ class _HomeContentState extends State<HomeContent>
     );
   }
 
-  Widget _buildGreetingCard() {
+  Widget _buildGreetingCard(double width, double height) {
+    final titleFontSize = width < 360 ? 18.0 : (width < 400 ? 19.0 : 20.0);
+    final subtitleFontSize = width < 360 ? 13.0 : (width < 400 ? 14.0 : 15.0);
+    final circleSize = width < 360 ? 60.0 : (width < 400 ? 70.0 : 80.0);
+    final iconSize = circleSize * 0.5;
+    final cardPadding = width * 0.06; // 6% of screen width
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(cardPadding),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -261,15 +294,17 @@ class _HomeContentState extends State<HomeContent>
               children: [
                 Row(
                   children: [
-                    const Text(
-                      AppStrings.helloUser,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
+                    Flexible(
+                      child: Text(
+                        AppStrings.helloUser,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: titleFontSize,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: width * 0.03),
                     AnimatedBuilder(
                       animation: _notificationController,
                       builder: (context, child) {
@@ -314,12 +349,12 @@ class _HomeContentState extends State<HomeContent>
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                const Text(
+                SizedBox(height: height * 0.01),
+                Text(
                   AppStrings.readyToCheck,
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 15,
+                    fontSize: subtitleFontSize,
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -327,8 +362,8 @@ class _HomeContentState extends State<HomeContent>
             ),
           ),
           Container(
-            width: 80,
-            height: 80,
+            width: circleSize,
+            height: circleSize,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.black.withOpacity(0.2),
@@ -344,7 +379,7 @@ class _HomeContentState extends State<HomeContent>
               builder: (context, rotation, child) {
                 return Transform.rotate(
                   angle: rotation * 0.1,
-                  child: const Icon(Icons.eco, color: Colors.white, size: 40),
+                  child: Icon(Icons.eco, color: Colors.white, size: iconSize),
                 );
               },
             ),
@@ -354,9 +389,15 @@ class _HomeContentState extends State<HomeContent>
     );
   }
 
-  Widget _buildProcessFlow() {
+  Widget _buildProcessFlow(double width, double height) {
+    final titleFontSize = width < 360 ? 16.0 : (width < 400 ? 17.0 : 18.0);
+    final labelFontSize = width < 360 ? 10.0 : 11.0;
+    final iconSize = width < 360 ? 20.0 : 24.0;
+    final stepWidth = width < 360 ? 50.0 : 60.0;
+    final cardPadding = width * 0.06;
+
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(cardPadding),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -377,23 +418,44 @@ class _HomeContentState extends State<HomeContent>
       ),
       child: Column(
         children: [
-          const Text(
+          Text(
             'How It Works',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 18,
+              fontSize: titleFontSize,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: height * 0.025),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildProcessStep(Icons.camera_alt, AppStrings.takeAPicture, 0),
+              _buildProcessStep(
+                Icons.camera_alt,
+                AppStrings.takeAPicture,
+                0,
+                stepWidth,
+                iconSize,
+                labelFontSize,
+              ),
               _buildArrow(),
-              _buildProcessStep(Icons.analytics, AppStrings.seeDiagnosis, 1),
+              _buildProcessStep(
+                Icons.analytics,
+                AppStrings.seeDiagnosis,
+                1,
+                stepWidth,
+                iconSize,
+                labelFontSize,
+              ),
               _buildArrow(),
-              _buildProcessStep(Icons.medication, AppStrings.getMedicine, 2),
+              _buildProcessStep(
+                Icons.medication,
+                AppStrings.getMedicine,
+                2,
+                stepWidth,
+                iconSize,
+                labelFontSize,
+              ),
             ],
           ),
         ],
@@ -401,7 +463,14 @@ class _HomeContentState extends State<HomeContent>
     );
   }
 
-  Widget _buildProcessStep(IconData icon, String label, int index) {
+  Widget _buildProcessStep(
+    IconData icon,
+    String label,
+    int index,
+    double stepWidth,
+    double iconSize,
+    double fontSize,
+  ) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
       duration: Duration(milliseconds: 800 + (index * 200)),
@@ -424,16 +493,20 @@ class _HomeContentState extends State<HomeContent>
                     ),
                   ],
                 ),
-                child: Icon(icon, color: AppColors.primaryGreen, size: 24),
+                child: Icon(
+                  icon,
+                  color: AppColors.primaryGreen,
+                  size: iconSize,
+                ),
               ),
               const SizedBox(height: 12),
               SizedBox(
-                width: 60,
+                width: stepWidth,
                 child: Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
-                    fontSize: 11,
+                    fontSize: fontSize,
                     fontWeight: FontWeight.w500,
                   ),
                   textAlign: TextAlign.center,
@@ -461,9 +534,15 @@ class _HomeContentState extends State<HomeContent>
     );
   }
 
-  Widget _buildQuickStatsCard() {
+  Widget _buildQuickStatsCard(double width, double height) {
+    final titleFontSize = width < 360 ? 16.0 : (width < 400 ? 17.0 : 18.0);
+    final valueFontSize = width < 360 ? 18.0 : (width < 400 ? 19.0 : 20.0);
+    final labelFontSize = width < 360 ? 11.0 : 12.0;
+    final iconSize = width < 360 ? 18.0 : 20.0;
+    final cardPadding = width * 0.05;
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(cardPadding),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -480,24 +559,45 @@ class _HomeContentState extends State<HomeContent>
           Row(
             children: [
               Icon(Icons.analytics, color: AppColors.primaryGreen, size: 24),
-              const SizedBox(width: 12),
-              const Text(
+              SizedBox(width: width * 0.03),
+              Text(
                 'Quick Stats',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: titleFontSize,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: height * 0.025),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildStatItem('Scans Today', '0', Icons.today),
-              _buildStatItem('Total Plants', '0', Icons.eco),
-              _buildStatItem('Health Score', '0%', Icons.favorite),
+              _buildStatItem(
+                'Scans Today',
+                '0',
+                Icons.today,
+                iconSize,
+                valueFontSize,
+                labelFontSize,
+              ),
+              _buildStatItem(
+                'Total Plants',
+                '0',
+                Icons.eco,
+                iconSize,
+                valueFontSize,
+                labelFontSize,
+              ),
+              _buildStatItem(
+                'Health Score',
+                '0%',
+                Icons.favorite,
+                iconSize,
+                valueFontSize,
+                labelFontSize,
+              ),
             ],
           ),
         ],
@@ -505,7 +605,14 @@ class _HomeContentState extends State<HomeContent>
     );
   }
 
-  Widget _buildStatItem(String label, String value, IconData icon) {
+  Widget _buildStatItem(
+    String label,
+    String value,
+    IconData icon,
+    double iconSize,
+    double valueFontSize,
+    double labelFontSize,
+  ) {
     return Column(
       children: [
         Container(
@@ -514,13 +621,13 @@ class _HomeContentState extends State<HomeContent>
             color: AppColors.primaryGreen.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, color: AppColors.primaryGreen, size: 20),
+          child: Icon(icon, color: AppColors.primaryGreen, size: iconSize),
         ),
         const SizedBox(height: 8),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 20,
+          style: TextStyle(
+            fontSize: valueFontSize,
             fontWeight: FontWeight.bold,
             color: AppColors.primaryGreen,
           ),
@@ -528,14 +635,26 @@ class _HomeContentState extends State<HomeContent>
         const SizedBox(height: 4),
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+          style: TextStyle(
+            fontSize: labelFontSize,
+            color: AppColors.textSecondary,
+          ),
           textAlign: TextAlign.center,
         ),
       ],
     );
   }
 
-  Widget _buildActionButtons(BuildContext context) {
+  Widget _buildActionButtons(
+    BuildContext context,
+    double width,
+    double height,
+  ) {
+    final buttonHeight = height < 600 ? 100.0 : (height < 700 ? 110.0 : 120.0);
+    final iconSize = width < 360 ? 28.0 : 32.0;
+    final fontSize = width < 360 ? 12.0 : 14.0;
+    final buttonSpacing = height * 0.02;
+
     return Column(
       children: [
         // Main action buttons row
@@ -548,6 +667,9 @@ class _HomeContentState extends State<HomeContent>
                 Icons.qr_code_scanner,
                 AppColors.primaryGreen,
                 () => _navigateWithAnimation(context, const CameraScreen()),
+                height: buttonHeight,
+                iconSize: iconSize,
+                fontSize: fontSize,
                 gradient: LinearGradient(
                   colors: [AppColors.primaryGreen, AppColors.lightGreen],
                 ),
@@ -561,6 +683,9 @@ class _HomeContentState extends State<HomeContent>
                 Icons.upload_file,
                 AppColors.lightGreen,
                 () => _navigateWithAnimation(context, const FileUploadScreen()),
+                height: buttonHeight,
+                iconSize: iconSize,
+                fontSize: fontSize,
                 gradient: LinearGradient(
                   colors: [AppColors.lightGreen, AppColors.primaryGreen],
                 ),
@@ -569,7 +694,7 @@ class _HomeContentState extends State<HomeContent>
           ],
         ),
 
-        const SizedBox(height: 15),
+        SizedBox(height: buttonSpacing),
 
         // History button
         _buildActionButton(
@@ -579,6 +704,9 @@ class _HomeContentState extends State<HomeContent>
           AppColors.darkGreen,
           () => _navigateWithAnimation(context, const HistoryScreen()),
           width: double.infinity,
+          height: buttonHeight,
+          iconSize: iconSize,
+          fontSize: fontSize,
           gradient: LinearGradient(
             colors: [AppColors.darkGreen, AppColors.primaryGreen],
             begin: Alignment.centerLeft,
@@ -596,14 +724,17 @@ class _HomeContentState extends State<HomeContent>
     Color color,
     VoidCallback onTap, {
     double? width,
+    required double height,
+    required double iconSize,
+    required double fontSize,
     Gradient? gradient,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: width,
-        height: 120,
-        padding: const EdgeInsets.all(20),
+        height: height,
+        padding: EdgeInsets.all(height * 0.15), // 15% of button height
         decoration: BoxDecoration(
           gradient:
               gradient ??
@@ -621,19 +752,19 @@ class _HomeContentState extends State<HomeContent>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(iconSize * 0.375), // 37.5% of icon size
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: Colors.white, size: 32),
+              child: Icon(icon, color: Colors.white, size: iconSize),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: height * 0.1), // 10% of button height
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
-                fontSize: 14,
+                fontSize: fontSize,
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
